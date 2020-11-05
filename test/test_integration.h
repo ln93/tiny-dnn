@@ -7,13 +7,9 @@
 */
 #pragma once
 
-#include <gtest/gtest.h>
-
 #include <functional>
 #include <vector>
 
-#include "test/testhelper.h"
-#include "tiny_dnn/tiny_dnn.h"
 #include "tiny_dnn/util/gradient_check.h"
 
 namespace tiny_dnn {
@@ -23,8 +19,8 @@ TEST(integration, train1) {
   network<sequential> nn;
   adagrad optimizer;
 
-  nn << fully_connected_layer(3, 2) << tanh_layer()
-     << recurrent_cell_layer(2, 2) << sigmoid();
+  nn << recurrent_layer(rnn(3, 20), 1) << fully_connected_layer(20, 2)
+     << sigmoid();
   nn.weight_init(weight_init::xavier());
   vec_t a(3), t(2), a2(3), t2(2);
 
@@ -45,7 +41,7 @@ TEST(integration, train1) {
     train.push_back(t2);
   }
   optimizer.alpha = 0.1;
-  nn.train<mse>(optimizer, data, train, 1, 20);
+  nn.train<mse>(optimizer, data, train, 1, 10);
 
   vec_t predicted = nn.predict(a);
 
@@ -66,8 +62,7 @@ TEST(integration, train_different_batches1) {
     network<sequential> nn;
     adagrad optimizer;
 
-    nn << fully_connected_layer(3, 2) << tanh_layer()
-       << recurrent_cell_layer(2, 2) << sigmoid();
+    nn << fully_connected_layer(3, 2) << sigmoid();
     nn.weight_init(weight_init::xavier());
 
     vec_t a(3), t(2), a2(3), t2(2);
@@ -231,7 +226,7 @@ TEST(integration, gradient_check8) {  // sigmoid - absolute eps
 TEST(integration, gradient_check9_pad_same) {  // sigmoid - mse - padding same
   network<sequential> nn;
 
-  nn << convolutional_layer(5, 5, 3, 1, 1, padding::same, true, 1, 1,
+  nn << convolutional_layer(5, 5, 3, 1, 1, padding::same, true, 1, 1, 1, 1,
                             core::backend_t::internal)
      << sigmoid();
 
@@ -244,7 +239,7 @@ TEST(integration, gradient_check9_pad_same) {  // sigmoid - mse - padding same
 TEST(integration, gradient_check10_w_stride) {  // sigmoid - mse - w_stride > 1
   network<sequential> nn;
 
-  nn << convolutional_layer(3, 3, 1, 1, 1, padding::valid, true, 2, 1,
+  nn << convolutional_layer(3, 3, 1, 1, 1, padding::valid, true, 2, 1, 1, 1,
                             core::backend_t::internal)
      << sigmoid();
 
@@ -257,7 +252,7 @@ TEST(integration, gradient_check10_w_stride) {  // sigmoid - mse - w_stride > 1
 TEST(integration, gradient_check11_h_stride) {  // sigmoid - mse - h_stride > 1
   network<sequential> nn;
 
-  nn << convolutional_layer(3, 3, 1, 1, 1, padding::valid, true, 1, 2,
+  nn << convolutional_layer(3, 3, 1, 1, 1, padding::valid, true, 1, 2, 1, 1,
                             core::backend_t::internal)
      << sigmoid();
 
@@ -275,7 +270,7 @@ TEST(integration,
   core::connection_table connections(tbl, 3, 3);
 
   nn << convolutional_layer(7, 7, 3, 3, 1, connections, padding::valid, true, 1,
-                            1, core::backend_t::internal)
+                            1, 1, 1, core::backend_t::internal)
      << sigmoid();
 
   const auto test_data = generate_gradient_check_data(nn.in_data_size());
@@ -288,7 +283,7 @@ TEST(integration, gradient_check13_pad_same) {  // sigmoid - mse - padding same
   network<sequential> nn;
 
   nn << fully_connected_layer(10, 5 * 5)
-     << convolutional_layer(5, 5, 3, 1, 1, padding::same, true, 1, 1,
+     << convolutional_layer(5, 5, 3, 1, 1, padding::same, true, 1, 1, 1, 1,
                             core::backend_t::internal)
      << sigmoid();
 
@@ -347,7 +342,7 @@ TEST(integration, gradient_check17) {  // x-stride
 
   network nn;
   nn << fully_connected_layer(3, 8) << activation()
-     << average_pooling_layer(4, 2, 1, 2, 1, 2, 1)  // 4x2 => 2x2
+     << average_pooling_layer(4, 2, 1, 2, 1, 2, 1, false)  // 4x2 => 2x2
      << activation();
 
   const auto test_data = generate_gradient_check_data(nn.in_data_size());
@@ -364,7 +359,7 @@ TEST(integration, gradient_check18) {  // y-stride
 
   network nn;
   nn << fully_connected_layer(3, 8) << activation()
-     << average_pooling_layer(4, 2, 1, 1, 2, 1, 2)  // 4x2 => 4x1
+     << average_pooling_layer(4, 2, 1, 1, 2, 1, 2, false)  // 4x2 => 4x1
      << activation();
 
   const auto test_data = generate_gradient_check_data(nn.in_data_size());
@@ -380,7 +375,7 @@ TEST(integration, gradient_check19) {  // padding-same
   using network    = network<sequential>;
 
   network nn;
-  nn << average_pooling_layer(4, 2, 1, 2, 2, 1, 1, padding::same)
+  nn << average_pooling_layer(4, 2, 1, 2, 2, 1, 1, false, padding::same)
      << activation();
 
   const auto test_data = generate_gradient_check_data(nn.in_data_size());

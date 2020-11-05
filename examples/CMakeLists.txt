@@ -36,7 +36,11 @@ if(USE_SERIALIZER)
     target_link_libraries(example_deconv_train
         ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
-    cotire(example_mnist_train example_mnist_test example_mnist_quantized_train example_deconv_train)
+    add_executable(example_ssd_test ssd_detection/test.cpp ${tiny_dnn_headers})
+    target_link_libraries(example_ssd_test
+            ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+    cotire(example_mnist_train example_mnist_test example_mnist_quantized_train example_deconv_train example_ssd_test)
 endif()
 
 add_executable(example_deconv_visual deconv/visual.cpp ${tiny_dnn_headers})
@@ -51,7 +55,23 @@ add_executable(example_cifar_test cifar10/test.cpp ${tiny_dnn_headers})
 target_link_libraries(example_cifar_test
     ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
-cotire(example_deconv_visual example_cifar_train example_cifar_test)
+add_executable(example_recurrent_addition recurrent_addition/addition.cpp ${tiny_dnn_headers})
+target_link_libraries(example_recurrent_addition
+        ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+add_executable(example_train_char_rnn char_rnn/char_rnn.cpp ${tiny_dnn_headers})
+target_link_libraries(example_train_char_rnn
+        ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+add_executable(example_test_char_rnn char_rnn/test_char_rnn.cpp ${tiny_dnn_headers})
+target_link_libraries(example_test_char_rnn
+        ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+add_executable(example_sinus_fit sinus_fit/sinus_fit.cpp ${tiny_dnn_headers})
+target_link_libraries(example_sinus_fit
+        ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+cotire(example_deconv_visual example_cifar_train example_cifar_test example_recurrent_addition example_train_char_rnn example_test_char_rnn example_sinus_fit)
 
 if(PROTO_CPP_AVAILABLE)
     include_directories(${PROTOBUF_INCLUDE_DIRS})
@@ -66,4 +86,10 @@ endif()
 
 if(PROTO_CPP_GENERATE)
     add_dependencies(example_caffe_converter generated_proto)
+endif()
+
+if(USE_CBLAS)
+    add_executable(example_cblas_mlp backends/cblas/test_mlp.cpp ${tiny_dnn_headers})
+    target_link_libraries(example_cblas_mlp
+            ${project_library_target_name} ${REQUIRED_LIBRARIES})
 endif()

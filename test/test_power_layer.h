@@ -7,12 +7,7 @@
 */
 #pragma once
 
-#include <gtest/gtest.h>
-
 #include <vector>
-
-#include "test/testhelper.h"
-#include "tiny_dnn/tiny_dnn.h"
 
 namespace tiny_dnn {
 
@@ -56,7 +51,7 @@ TEST(power, gradient_check) {
     const size_t out_edge = uniform_idx(out_data);
     const size_t out_idx  = uniform_idx(out_data[out_edge][0]);
     float_t ngrad = numeric_gradient(pw, input_data, in_edge, in_idx, out_data,
-                                     out_grad, out_edge, out_idx);
+                                     out_edge, out_idx);
     float_t cgrad = analytical_gradient(pw, input_data, in_edge, in_idx,
                                         out_data, out_grad, out_edge, out_idx);
     EXPECT_NEAR(ngrad, cgrad, epsilon<float_t>());
